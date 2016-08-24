@@ -1,0 +1,16 @@
+{
+  "name": "cosmia-core",
+  "version": "0.0.1",
+  "description": "Content Oriented Static Management for Internet Applications",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "author": "Christopher J Gore",
+  "license": "MIT",
+  "dependencies": {
+    "handlebars-helpers": "^0.7.5",
+    "htmlparser2": "^3.9.1",
+    "recursive-readdir": "^2.0.0"
+  }
+}
