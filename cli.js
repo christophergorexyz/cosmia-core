@@ -10,21 +10,20 @@ let userArgs = process.argv.slice(2);
 let sourceDirectory = path.resolve('src');
 let outputDirectory = path.resolve('dist');
 
-let helpArgs = ['-h', 'help', '--help'];
 
 function printUsage() {
-    console.log(chalk.blue('Usage') + ': cosmia [-h | help | --help | [<projectDirectory>] [<outputDirectory>]]\n');
+    console.log(chalk.blue('Usage') + ': cosmia [-h | [<projectDirectory>] [<outputDirectory>]]');
 }
 
 //main
 (() => {
     if (userArgs.length > 2) {
-        console.error(chalk.red('ERROR') + ': cosmia: too many parameters');
+        console.error(chalk.red('too many parameters'));
         printUsage();
         process.exitCode = 1;
         return;
     }
-    if (userArgs.length === 1 && helpArgs.indexOf(userArgs[0]) >= 0){
+    if (userArgs.length === 1 && userArgs[0] === '-h'){
         printUsage();
         return;
     }
@@ -39,4 +38,5 @@ function printUsage() {
     }
 
     cosmia(sourceDirectory, outputDirectory);
+
 })();
