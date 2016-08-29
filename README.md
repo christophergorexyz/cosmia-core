@@ -32,7 +32,7 @@ let cosmia = require('cosmia-core');
 let srcFolder = path.resolve('./src');
 let distFolder = path.resolve('./dist');
 
-cosmia(projectFolder, outputFolder);
+cosmia(srcFolder, distFolder);
 
 ```
 
