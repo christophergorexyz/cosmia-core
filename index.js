@@ -179,13 +179,13 @@ function _compilePages(outputDir) {
 }
 
 
-function Cosmia(projectFolder, outputFolder) {
+function Cosmia(srcFolder, distFolder) {
     try {
-        partialsDir = path.resolve(projectFolder, COSMIA_PARTIAL_PATH);
-        dataDir = path.resolve(projectFolder, COSMIA_DATA_PATH);
-        layoutsDir = path.resolve(projectFolder, COSMIA_LAYOUT_PATH);
-        helpersDir = path.resolve(projectFolder, COSMIA_HELPERS_PATH);
-        pagesDir = path.resolve(projectFolder, COSMIA_PAGES_PATH);
+        partialsDir = path.resolve(srcFolder, COSMIA_PARTIAL_PATH);
+        dataDir = path.resolve(srcFolder, COSMIA_DATA_PATH);
+        layoutsDir = path.resolve(srcFolder, COSMIA_LAYOUT_PATH);
+        helpersDir = path.resolve(srcFolder, COSMIA_HELPERS_PATH);
+        pagesDir = path.resolve(srcFolder, COSMIA_PAGES_PATH);
 
         //TODO: this structure seems weird to me. should probably be rewritten
         //I don't like having to `catch` so often, and i'd rather it to all bubble
@@ -206,7 +206,7 @@ function Cosmia(projectFolder, outputFolder) {
                 });
             })
             .then(() => {
-                return _compilePages(outputFolder).then(() => {
+                return _compilePages(distFolder).then(() => {
                     console.log(chalk.blue(PACKAGE_NAME) + ': pages compiled');
                 }).catch((err) => {
                     throw err;
