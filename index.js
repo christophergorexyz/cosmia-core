@@ -2,6 +2,7 @@
 
 let fs = require('fs');
 let path = require('path');
+let mkdirp = require('mkdirp'); //like `mkdir -p`
 
 let assign = require('lodash.assign');
 
@@ -85,7 +86,7 @@ function _extractCustomElement(page, attribute, process) {
             try {
                 page[attribute] = process(element);
             } catch (err) {
-                throw new Error(page.name + '\n' + err);
+                throw page.name + '\n' + err;
             }
         }
 
@@ -148,12 +149,9 @@ function _registerAppComponents() {
         _processDirectory(dataDir, EXTENSION_JSON, _registerDataFile),
         _processDirectory(layoutsDir, EXTENSION_HBS, _registerLayoutFile),
         _processDirectory(helpersDir, EXTENSION_JS, _registerHelperFile)
-    ]).then(() => {
-        console.log(chalk.blue(PACKAGE_NAME) + ': components registered');
-    });
+    ]);
 }
 
-//TODO: fix error handling here
 function _compilePages(outputDir) {
     return new Promise((resolve, reject) => {
         for (var p in pageData) {
@@ -168,23 +166,15 @@ function _compilePages(outputDir) {
                 }, pageContext));
                 var outputPath = path.resolve(pageData[p].path.replace(pagesDir, outputDir) + '.html');
 
-                fs.writeFile(outputPath, finalPage, (err) => {
-                    if (err) {
-                        reject(err);
-                        return;
-                    }
-                });
+                //do this stuff synchronously to avoid race conditions
+                mkdirp.sync(path.dirname(outputPath));
+                fs.writeFileSync(outputPath, finalPage, 'utf8');
             } catch (err) {
                 reject(err);
                 return;
             }
         }
         return resolve();
-
-    }).then(() => {
-        console.log(chalk.blue(PACKAGE_NAME) + ': pages compiled');
-    }).catch((err) => {
-        throw new Error(err);
     });
 }
 
@@ -197,21 +187,33 @@ function Cosmia(projectFolder, outputFolder) {
         helpersDir = path.resolve(projectFolder, COSMIA_HELPERS_PATH);
         pagesDir = path.resolve(projectFolder, COSMIA_PAGES_PATH);
 
+        //TODO: this structure seems weird to me. should probably be rewritten
+        //I don't like having to `catch` so often, and i'd rather it to all bubble
+        //up to the outer try/catch instead of duplicating it in the promise
         Promise.resolve()
             .then(() => {
-                return _registerAppComponents().catch((err) => {
-                    throw new Error(err);
+                return _registerAppComponents().then(() => {
+                    console.log(chalk.blue(PACKAGE_NAME) + ': components registered');
+                }).catch((err) => {
+                    throw err;
                 });
             })
             .then(() => {
-                return _processDirectory(pagesDir, EXTENSION_HBS, _processPage).catch((err) => {
-                    throw new Error(err);
+                return _processDirectory(pagesDir, EXTENSION_HBS, _processPage).then(() => {
+                    console.log(chalk.blue(PACKAGE_NAME) + ': data extracted');
+                }).catch((err) => {
+                    throw err;
                 });
             })
             .then(() => {
-                return _compilePages(outputFolder).catch((err) => {
-                    throw new Error(err);
+                return _compilePages(outputFolder).then(() => {
+                    console.log(chalk.blue(PACKAGE_NAME) + ': pages compiled');
+                }).catch((err) => {
+                    throw err;
                 });
+            }).catch((err) => {
+                console.error(chalk.red(err));
+                process.exitCode = 1;
             });
     } catch (err) {
         console.error(chalk.red(err));
