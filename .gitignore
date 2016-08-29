@@ -4,3 +4,5 @@
 /bower_components/
 /node_modules/
 test/dist/
+
+.DS_Store
