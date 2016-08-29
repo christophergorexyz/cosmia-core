@@ -65,21 +65,20 @@ function _extractCustomElement(page, attribute, process) {
     //parse the html and dig out the relevant data element by custom attribute
     var dom = new htmlparser.parseDOM(page.content);
 
-
     //find an element with the "proprietary" attribute `cosmia-data`
     var dataElements = domutils.find((e) =>
         (e.attribs !== undefined && e.attribs[attribute] !== undefined),
         dom, true);
 
     if (dataElements.length > 1) {
-        throw new Error(ERROR_MESSAGE['cosmia-custom-element']);
+        throw ERROR_MESSAGE['cosmia-custom-element'];
     }
 
     if (dataElements.length) {
         var element = dataElements[0];
 
         if (element.children.length > 1) {
-            throw new Error(ERROR_MESSAGE['cosmia-custom-child']);
+            throw ERROR_MESSAGE['cosmia-custom-child'];
         }
 
         if (element.children.length) {
@@ -156,17 +155,23 @@ function _compilePages(outputDir) {
     return new Promise((resolve, reject) => {
         for (var p in pageData) {
             try {
+                //TODO: make sure cosmia custom elements are set in a single pass.
+                //as it stands, we'll need two new lines for each additional custom
+                //element, but it could be reduced to one new line
                 var pageContext = assign({}, siteData, pageData[p]['cosmia-data']);
+                pageContext['cosmia-script'] = pageData[p]['cosmia-script'];
+
                 var layoutName = (pageContext.layout ? pageContext.layout : 'default');
                 var compiledPage = handlebars.compile(pageData[p].content);
                 var pageBody = compiledPage(pageContext);
+
 
                 var finalPage = (compiledLayouts[layoutName])(assign({}, {
                     body: pageBody
                 }, pageContext));
                 var outputPath = path.resolve(pageData[p].path.replace(pagesDir, outputDir) + '.html');
 
-                //do this stuff synchronously to avoid race conditions
+                //doing this stuff synchronously to avoid race conditions
                 mkdirp.sync(path.dirname(outputPath));
                 fs.writeFileSync(outputPath, finalPage, 'utf8');
             } catch (err) {

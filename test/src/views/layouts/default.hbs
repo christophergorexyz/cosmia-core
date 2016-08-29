@@ -12,6 +12,7 @@
 <body class="{{page-class}}">
     <header>
         HEADER
+        {{>navigation}}
     </header>
     <main>
         {{{ body }}}
@@ -19,7 +20,8 @@
     <footer>
         FOOTER
     </footer>
-    {{{ page-script }}}
+    {{!-- this should go *below* third party libraries and your main script in order to ensure everything is correctly defined and runs after html loads --}}
+    {{{ cosmia-script }}}
 </body>
 
 </html>
