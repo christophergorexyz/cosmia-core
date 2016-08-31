@@ -161,6 +161,16 @@ function _compilePages(outputDir) {
                 var pageContext = assign({}, siteData, pageData[p]['cosmia-data']);
                 pageContext['cosmia-script'] = pageData[p]['cosmia-script'];
 
+                var canonicalPath = path.join('/', pageData[p].path.replace(pagesDir, '') + '.html');
+
+                //ideally, everything should be an index.html file in the end
+                //if it's not, we'll leave the full path in the canonical url
+                if (/^index.html$/.test(path.basename(canonicalPath))) {
+                    canonicalPath = canonicalPath.replace(path.basename(canonicalPath), '');
+                }
+
+                pageContext['page-path'] = canonicalPath;
+
                 var layoutName = (pageContext.layout ? pageContext.layout : 'default');
                 var compiledPage = handlebars.compile(pageData[p].content);
                 var pageBody = compiledPage(pageContext);

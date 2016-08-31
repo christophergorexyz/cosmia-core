@@ -4,7 +4,7 @@
   "description": "Content Oriented Static Management for Internet Applications",
   "main": "index.js",
   "scripts": {
-    "test": "echo 'TODO: write a bunch of tests'"
+    "test": "cosmia test/"
   },
   "bin": {
     "cosmia": "./cli.js"

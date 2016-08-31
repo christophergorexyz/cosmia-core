@@ -1,3 +1,4 @@
 {
-    "site-title": "Site Title"
+    "title": "Site Title",
+    "domain": "http://localhost"
 }
