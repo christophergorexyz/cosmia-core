@@ -160,6 +160,7 @@ function _compilePages(outputDir) {
                 //element, but it could be reduced to one new line
                 var pageContext = assign({}, siteData, pageData[p]['cosmia-data']);
                 pageContext['cosmia-script'] = pageData[p]['cosmia-script'];
+                pageContext['cosmia-data'] = pageData[p]['cosmia-data'];
 
                 var canonicalPath = path.join('/', pageData[p].path.replace(pagesDir, '') + '.html');
 

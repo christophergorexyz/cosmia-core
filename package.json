@@ -4,7 +4,9 @@
   "description": "Content Oriented Static Management for Internet Applications",
   "main": "index.js",
   "scripts": {
-    "test": "cosmia test/"
+    "prestart":"npm prune && npm install",
+    "start": "npm run test",
+    "test": "./cli.js test/"
   },
   "bin": {
     "cosmia": "./cli.js"
