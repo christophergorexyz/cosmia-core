@@ -25,17 +25,18 @@ const COSMIA_LAYOUT_PATH = 'views/layouts';
 const COSMIA_HELPERS_PATH = 'views/helpers';
 const COSMIA_PAGES_PATH = 'views/pages';
 
+const COSMIA_SCRIPT= 'cosmia-script';
+const COSMIA_DATA = 'cosmia-data';
+const COSMIA_TEMPLATE_DATA = 'cosmia-template-data';
+
 const PACKAGE_NAME = chalk.blue('cosmia-core');
 
-
-const ERROR_MESSAGE = {
-    'cosmia-custom-child': 'cosmia custom elements may only have a single text child.',
-    'cosmia-custom-element': 'Only one of a given type of cosmia custom element is allowed per page.'
-};
+const ERROR_MESSAGE_COSMIA_CUSTOM_CHILD = 'cosmia custom elements may only have a single text child.';
+const ERORR_MESSAGE_COSMIA_CUSTOM_ELEMENT = 'Only one of a given type of cosmia custom element is allowed per page.';
 
 
 var siteData = {};
-var compiledLayouts = {};
+var handlebarsLayouts = {};
 var pageData = [];
 
 var partialsDir = '';
@@ -45,23 +46,7 @@ var helpersDir = '';
 var pagesDir = '';
 
 
-function _registerDataFile(name, content) {
-    siteData[path.basename(name)] = JSON.parse(content);
-}
-
-function _registerPartialFile(name, content) {
-    handlebars.registerPartial(path.basename(name), content);
-}
-
-function _registerLayoutFile(name, content) {
-    compiledLayouts[path.basename(name)] = handlebars.compile(content);
-}
-
-function _registerHelperFile(name, content) {
-    handlebars.registerHelper(require(path.resolve(name)));
-}
-
-function _extractCustomElement(page, attribute, process) {
+function _extractCustomPageElement(page, attribute, process) {
     //parse the html and dig out the relevant data element by custom attribute
     var dom = new htmlparser.parseDOM(page.content);
 
@@ -71,21 +56,21 @@ function _extractCustomElement(page, attribute, process) {
         dom, true);
 
     if (dataElements.length > 1) {
-        throw ERROR_MESSAGE['cosmia-custom-element'];
+        throw ERORR_MESSAGE_COSMIA_CUSTOM_ELEMENT;
     }
 
     if (dataElements.length) {
         var element = dataElements[0];
 
         if (element.children.length > 1) {
-            throw ERROR_MESSAGE['cosmia-custom-child'];
+            throw ERROR_MESSAGE_COSMIA_CUSTOM_CHILD;
         }
 
         if (element.children.length) {
             try {
                 page[attribute] = process(element);
             } catch (err) {
-                throw page.name + '\n' + err;
+                throw page.path + '\n' + err;
             }
         }
 
@@ -98,13 +83,36 @@ function _extractCustomElement(page, attribute, process) {
     return page;
 }
 
+
+function _registerDataFile(name, content) {
+    siteData[path.basename(name)] = JSON.parse(content);
+}
+
+function _registerPartialFile(name, content) {
+    handlebars.registerPartial(path.basename(name), content);
+}
+
+function _registerLayoutFile(name, content) {
+    var layout = {
+        content: content,
+        path: name
+    };
+    layout.content = _extractCustomPageElement(layout.conent, COSMIA_TEMPLATE_DATA, (e) => JSON.parse(domutils.getInnerHTML(e)));
+    layout.compile = handlebars.compile(content)
+    handlebarsLayouts[path.basename(name)] = layout
+}
+
+function _registerHelperFile(name, content) {
+    handlebars.registerHelper(require(path.resolve(name)));
+}
+
 function _processPage(name, content) {
     var page = {
         path: name,
         content: content
     };
-    page = _extractCustomElement(page, 'cosmia-data', (e) => JSON.parse(domutils.getInnerHTML(e)));
-    page = _extractCustomElement(page, 'cosmia-script', (e) => domutils.getOuterHTML(e));
+    page = _extractCustomPageElement(page, COSMIA_DATA, (e) => JSON.parse(domutils.getInnerHTML(e)));
+    page = _extractCustomPageElement(page, COSMIA_SCRIPT, (e) => domutils.getOuterHTML(e));
     pageData.push(page);
 }
 
@@ -176,15 +184,18 @@ function _compilePages(outputDir) {
                 var compiledPage = handlebars.compile(pageData[p].content);
                 var pageBody = compiledPage(pageContext);
 
+                do {
+                    pageBody = (handlebarsLayouts[layoutName]).compile(assign({}, {
+                        body: pageBody
+                    }, pageContext));
+                    layoutName = handlebarsLayouts[layoutName]['cosmia-template-data'].parent;
+                }while (layoutName);
 
-                var finalPage = (compiledLayouts[layoutName])(assign({}, {
-                    body: pageBody
-                }, pageContext));
                 var outputPath = path.resolve(pageData[p].path.replace(pagesDir, outputDir) + '.html');
 
                 //doing this stuff synchronously to avoid race conditions
                 mkdirp.sync(path.dirname(outputPath));
-                fs.writeFileSync(outputPath, finalPage, 'utf8');
+                fs.writeFileSync(outputPath, pageBody, 'utf8');
             } catch (err) {
                 reject(err);
                 return;
