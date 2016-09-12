@@ -46,11 +46,12 @@ var helpersDir = '';
 var pagesDir = '';
 
 
+//Used to pull a cosmia-* element from the
 function _extractCustomPageElement(page, attribute, process) {
     //parse the html and dig out the relevant data element by custom attribute
     var dom = new htmlparser.parseDOM(page.content);
 
-    //find an element with the "proprietary" attribute `cosmia-data`
+    //find an element with the specified `attribute`
     var dataElements = domutils.find((e) =>
         (e.attribs !== undefined && e.attribs[attribute] !== undefined),
         dom, true);
@@ -97,9 +98,9 @@ function _registerLayoutFile(name, content) {
         content: content,
         path: name
     };
-    layout.content = _extractCustomPageElement(layout.conent, COSMIA_TEMPLATE_DATA, (e) => JSON.parse(domutils.getInnerHTML(e)));
-    layout.compile = handlebars.compile(content)
-    handlebarsLayouts[path.basename(name)] = layout
+    layout.content = _extractCustomPageElement(layout.content, COSMIA_TEMPLATE_DATA, (e) => JSON.parse(domutils.getInnerHTML(e)));
+    layout.compile = handlebars.compile(content);
+    handlebarsLayouts[path.basename(name)] = layout;
 }
 
 function _registerHelperFile(name, content) {
@@ -188,7 +189,8 @@ function _compilePages(outputDir) {
                     pageBody = (handlebarsLayouts[layoutName]).compile(assign({}, {
                         body: pageBody
                     }, pageContext));
-                    layoutName = handlebarsLayouts[layoutName]['cosmia-template-data'].parent;
+                    var templateData =handlebarsLayouts[layoutName]['cosmia-template-data'];
+                    layoutName = templateData ? templateData.parent : false;
                 }while (layoutName);
 
                 var outputPath = path.resolve(pageData[p].path.replace(pagesDir, outputDir) + '.html');
