@@ -98,8 +98,8 @@ function _registerLayoutFile(name, content) {
         content: content,
         path: name
     };
-    layout.content = _extractCustomPageElement(layout.content, COSMIA_TEMPLATE_DATA, (e) => JSON.parse(domutils.getInnerHTML(e)));
-    layout.compile = handlebars.compile(content);
+    layout = _extractCustomPageElement(layout, COSMIA_TEMPLATE_DATA, (e) => JSON.parse(domutils.getInnerHTML(e)));
+    layout.compile = handlebars.compile(layout.content);
     handlebarsLayouts[path.basename(name)] = layout;
 }
 
