@@ -25,7 +25,7 @@ const COSMIA_LAYOUT_PATH = 'views/layouts';
 const COSMIA_HELPERS_PATH = 'views/helpers';
 const COSMIA_PAGES_PATH = 'views/pages';
 
-const COSMIA_SCRIPT= 'cosmia-script';
+const COSMIA_SCRIPT = 'cosmia-script';
 const COSMIA_DATA = 'cosmia-data';
 const COSMIA_TEMPLATE_DATA = 'cosmia-template-data';
 
@@ -185,13 +185,24 @@ function _compilePages(outputDir) {
                 var compiledPage = handlebars.compile(pageData[p].content);
                 var pageBody = compiledPage(pageContext);
 
+
+                if (handlebarsLayouts[layoutName] === undefined ) {
+                    console.warn(PACKAGE_NAME + ": " + chalk.yellow("WARNING: Layout") + " `" + layoutName + "` " + chalk.yellow("not found. Using") + " `default` " + chalk.yellow('instead.'));
+                    layoutName = 'default';
+                }
+
+                //TODO: We're only pulling out the layout-class here, but it might
+                //be a good idea to pull out the entire layout dataset, with nested layouts overriding their parents, and stuff that into the page context
+                var templateData = handlebarsLayouts[layoutName]['cosmia-template-data'];
+                pageContext['layout-class'] = templateData ? templateData['layout-class'] : '';
+
                 do {
                     pageBody = (handlebarsLayouts[layoutName]).compile(assign({}, {
                         body: pageBody
                     }, pageContext));
-                    var templateData =handlebarsLayouts[layoutName]['cosmia-template-data'];
+                    templateData = handlebarsLayouts[layoutName]['cosmia-template-data'];
                     layoutName = templateData ? templateData.parent : false;
-                }while (layoutName);
+                } while (layoutName);
 
                 var outputPath = path.resolve(pageData[p].path.replace(pagesDir, outputDir) + '.html');
 
