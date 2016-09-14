@@ -10,7 +10,7 @@
     <link rel="canonical" href="{{site.domain}}{{page-path}}">
 </head>
 
-<body class="{{page-class}} {{layout-class}}">
+<body class="{{page-class}} {{cosmia-template-data.layout-class}}">
     <header>
         HEADER
         {{>navigation}}
@@ -23,6 +23,9 @@
     {{{ cosmia-script }}}
     <script type="application/json" class="page-data">
         {{{ json cosmia-data }}}
+    </script>
+    <script type="application/json" class="template-data">
+        {{{ json cosmia-template-data }}}
     </script>
 </body>
 

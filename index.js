@@ -181,27 +181,35 @@ function _compilePages(outputDir) {
 
                 pageContext['page-path'] = canonicalPath;
 
-                var layoutName = (pageContext.layout ? pageContext.layout : 'default');
+                var pageLayoutName = (pageContext.layout ? pageContext.layout : 'default');
                 var compiledPage = handlebars.compile(pageData[p].content);
                 var pageBody = compiledPage(pageContext);
 
 
-                if (handlebarsLayouts[layoutName] === undefined ) {
-                    console.warn(PACKAGE_NAME + ": " + chalk.yellow("WARNING: Layout") + " `" + layoutName + "` " + chalk.yellow("not found. Using") + " `default` " + chalk.yellow('instead.'));
-                    layoutName = 'default';
+                if (handlebarsLayouts[pageLayoutName] === undefined ) {
+                    console.warn(PACKAGE_NAME + ": " + chalk.yellow("WARNING: Layout") + " `" + pageLayoutName + "` " + chalk.yellow("not found. Using") + " `default` " + chalk.yellow('instead.'));
+                    pageLayoutName = 'default';
                 }
 
-                //TODO: We're only pulling out the layout-class here, but it might
-                //be a good idea to pull out the entire layout dataset, with nested layouts overriding their parents, and stuff that into the page context
-                var templateData = handlebarsLayouts[layoutName]['cosmia-template-data'];
-                pageContext['layout-class'] = templateData ? templateData['layout-class'] : '';
+                var layoutName = pageLayoutName;
+                var templateData = null;
+                pageContext['cosmia-template-data'] = {};
+                do{
+                    templateData = handlebarsLayouts[layoutName]['cosmia-template-data'];
+                    pageContext['cosmia-template-data'] = assign({}, (templateData ? templateData : {}), pageContext['cosmia-template-data']);
+                    layoutName = templateData && templateData.parent ? templateData.parent : false;
+                } while (layoutName);
+
+                templateData = pageContext['cosmia-template-data'];
+
+                layoutName = pageLayoutName;
 
                 do {
                     pageBody = (handlebarsLayouts[layoutName]).compile(assign({}, {
                         body: pageBody
                     }, pageContext));
                     templateData = handlebarsLayouts[layoutName]['cosmia-template-data'];
-                    layoutName = templateData ? templateData.parent : false;
+                    layoutName = templateData && templateData.parent ? templateData.parent : false;
                 } while (layoutName);
 
                 var outputPath = path.resolve(pageData[p].path.replace(pagesDir, outputDir) + '.html');
