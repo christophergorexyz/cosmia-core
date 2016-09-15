@@ -45,7 +45,6 @@ var layoutsDir = '';
 var helpersDir = '';
 var pagesDir = '';
 
-
 //Used to pull a cosmia-* element from the
 function _extractCustomPageElement(page, attribute, process) {
     //parse the html and dig out the relevant data element by custom attribute
@@ -77,7 +76,7 @@ function _extractCustomPageElement(page, attribute, process) {
 
         //this doesn't seem like the fastest approach, but the domUtils removeElement call
         //doesn't appear to work correctly/how i'd expect it to, and is not documented
-        //...this might work better using streams...
+        //so falling back to a string operation
         page.content = domutils.getOuterHTML(dom).replace(domutils.getOuterHTML(element), '');
 
     }
@@ -128,9 +127,9 @@ function _processDirectory(dirName, extension, processor) {
                 return;
             }
             files.forEach((filename) => {
-                var matches = new RegExp('^([^.]+)' + extension + '$').exec(filename);
+                var matches = new RegExp('^([^.]+)' + extension + '$').exec(path.basename(filename));
                 if (matches) {
-                    var nameWithoutExtension = matches[1];
+                    var nameWithoutExtension = path.resolve(path.dirname(filename), matches[1]);
                     var fileContent = fs.readFileSync(path.resolve(dirName, filename), 'utf8');
                     try {
                         processor(nameWithoutExtension, fileContent);
@@ -186,7 +185,7 @@ function _compilePages(outputDir) {
                 var pageBody = compiledPage(pageContext);
 
 
-                if (handlebarsLayouts[pageLayoutName] === undefined ) {
+                if (handlebarsLayouts[pageLayoutName] === undefined) {
                     console.warn(PACKAGE_NAME + ": " + chalk.yellow("WARNING: Layout") + " `" + pageLayoutName + "` " + chalk.yellow("not found. Using") + " `default` " + chalk.yellow('instead.'));
                     pageLayoutName = 'default';
                 }
@@ -194,7 +193,7 @@ function _compilePages(outputDir) {
                 var layoutName = pageLayoutName;
                 var templateData = null;
                 pageContext['cosmia-template-data'] = {};
-                do{
+                do {
                     templateData = handlebarsLayouts[layoutName]['cosmia-template-data'];
                     pageContext['cosmia-template-data'] = assign({}, (templateData ? templateData : {}), pageContext['cosmia-template-data']);
                     layoutName = templateData && templateData.parent ? templateData.parent : false;
