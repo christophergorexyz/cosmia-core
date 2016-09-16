@@ -127,9 +127,9 @@ function _processDirectory(dirName, extension, processor) {
                 return;
             }
             files.forEach((filename) => {
-                var matches = new RegExp('^([^.]+)' + extension + '$').exec(path.basename(filename));
-                if (matches) {
-                    var nameWithoutExtension = path.resolve(path.dirname(filename), matches[1]);
+                if (path.extname(filename) === extension) {
+
+                    var nameWithoutExtension = path.resolve(path.dirname(filename), path.basename(filename, extension));
                     var fileContent = fs.readFileSync(path.resolve(dirName, filename), 'utf8');
                     try {
                         processor(nameWithoutExtension, fileContent);
