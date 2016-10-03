@@ -4,7 +4,6 @@ let fs = require('fs');
 let path = require('path');
 let mkdirp = require('mkdirp'); //like `mkdir -p`
 
-let assign = require('lodash.assign');
 let keys = require('lodash.keys');
 
 let recursiveReaddir = require('recursive-readdir');
@@ -160,7 +159,7 @@ function _compilePage(page, silent = false) {
     //TODO: make sure cosmia custom elements are set in a single pass.
     //as it stands, we'll need two new lines for each additional custom
     //element, but it could be reduced to one new line
-    var pageContext = assign({}, siteData, page['cosmia-data']);
+    var pageContext = Object.assign({}, siteData, page['cosmia-data']);
     pageContext['cosmia-script'] = page['cosmia-script'];
     pageContext['cosmia-data'] = page['cosmia-data'];
 
@@ -190,7 +189,7 @@ function _compilePage(page, silent = false) {
     //Child layouts override parent layout data
     do {
         templateData = handlebarsLayouts[layoutName]['cosmia-template-data'];
-        pageContext['cosmia-template-data'] = assign({}, (templateData ? templateData : {}), pageContext['cosmia-template-data']);
+        pageContext['cosmia-template-data'] = Object.assign({}, (templateData ? templateData : {}), pageContext['cosmia-template-data']);
         layoutName = templateData && templateData.parent ? templateData.parent : false;
     } while (layoutName);
 
@@ -199,7 +198,7 @@ function _compilePage(page, silent = false) {
     layoutName = pageLayoutName;
 
     do {
-        pageBody = (handlebarsLayouts[layoutName]).compile(assign({}, {
+        pageBody = (handlebarsLayouts[layoutName]).compile(Object.assign({}, {
             body: pageBody
         }, pageContext));
         templateData = handlebarsLayouts[layoutName]['cosmia-template-data'];
