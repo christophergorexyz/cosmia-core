@@ -1,6 +1,6 @@
 {
     "name": "cosmia-core",
-    "version": "0.1.2",
+    "version": "0.2.0",
     "description": "Content Oriented Static Management for Internet Applications",
     "main": "index.js",
     "repository": {
@@ -10,7 +10,7 @@
     "scripts": {
         "prestart": "npm prune && npm install",
         "start": "npm run test",
-        "test": "./cli.js test/"
+        "test": "./cli.js test/ && node test/app.js"
     },
     "bin": {
         "cosmia": "./cli.js"
@@ -24,6 +24,7 @@
         "htmlparser2": "^3.9.1",
         "js-markdown-extra": "^1.2.4",
         "lodash.assign": "^4.2.0",
+        "lodash.keys": "^4.2.0",
         "markdown": "^0.5.0",
         "mkdirp": "^0.5.1",
         "recursive-readdir": "^2.0.0"

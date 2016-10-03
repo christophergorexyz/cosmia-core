@@ -2,6 +2,7 @@
 
 'use strict';
 let cosmia = require('./index');
+
 let chalk = require('chalk');
 
 let path = require('path');
@@ -9,7 +10,6 @@ let path = require('path');
 let userArgs = process.argv.slice(2);
 let sourceDirectory = path.resolve('src');
 let outputDirectory = path.resolve('dist');
-
 
 function printUsage() {
     console.log(chalk.blue('Usage') + ': cosmia [-h | [<projectDirectory>] [<outputDirectory>]]\n');
