@@ -1,14 +1,14 @@
-#cosmia-core 
+# cosmia-core 
 
 cosmia-core is the build tool for cosmia, the Content Oriented System for the Management of Internet Applications 
 
 
-##What is it? 
+## What is it? 
 
 This tool can be thought of as a simple static site generator. Given a certain directory structure (see: `test/` folder)  containing a set of handlebars files (layouts, helpers, partials, and pages) and some data in json format, cosmia will compile that directory into a site and output it. 
 
 
-##CLI Usage 
+## CLI Usage 
 
 `cosmia [-h | [<projectDirectory>] [<outputDirectory>]]` 
 
@@ -21,11 +21,11 @@ If both a projectDirectory and an outputDirectory are passed, cosmia will look f
 Passing the `-h` option will print this message. 
 
 
-##API Usage 
+## API Usage 
 
-Accessing cosmia's API directly is very similar to usage on the commandline. However it does not make any assumptions about the current working directory. Instead, directory paths must be supplied. cosmia exports a single function that takes two arguments, srcFolder and distFolder.
+Accessing cosmia's API directly is very similar to usage on the commandline. However it does not make any assumptions about the current working directory. Instead, directory paths must be supplied. cosmia exports a single function that takes two arguments, srcFolder and distFolder. 
 
-```
+```js
 let path = require('path');
 let cosmia = require('cosmia-core');
 
@@ -36,3 +36,29 @@ cosmia(srcFolder, distFolder);
 
 ```
 
+Alternatively, you can compile specific pages on demand: 
+
+```js
+let cosmia = require('cosmia-core');
+
+cosmia.setup('./src').then(() => {
+    let pageBody = cosmia.compilePage('sub-section/index');
+});
+
+```
+
+
+## Roadmap 
+
+Support for favored technology will be prioritized over broad support for every technology under the sun. 
+
+1. Type support 
+    - pagination 
+    - sorting 
+    - varying views 
+1. DataStore Integration 
+    - content versioning 
+    - file system (git?) 
+    - NoSQL store 
+1. Proper test fixtures 
+    - mocha probably 
