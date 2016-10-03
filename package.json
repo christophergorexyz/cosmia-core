@@ -1,32 +1,32 @@
 {
-    "name": "cosmia-core",
-    "version": "0.2.0",
-    "description": "Content Oriented Static Management for Internet Applications",
-    "main": "index.js",
-    "repository": {
-        "type": "git",
-        "url": "git@github.com:theOutLiar/cosmia-core.git"
-    },
-    "scripts": {
-        "prestart": "npm prune && npm install",
-        "start": "npm run test",
-        "test": "./cli.js test/ && node test/app.js"
-    },
-    "bin": {
-        "cosmia": "./cli.js"
-    },
-    "author": "Christopher J Gore",
-    "license": "MIT",
-    "dependencies": {
-        "chalk": "^1.1.3",
-        "handlebars": "^4.0.5",
-        "handlebars-helpers": "^0.7.5",
-        "htmlparser2": "^3.9.1",
-        "js-markdown-extra": "^1.2.4",
-        "lodash.assign": "^4.2.0",
-        "lodash.keys": "^4.2.0",
-        "markdown": "^0.5.0",
-        "mkdirp": "^0.5.1",
-        "recursive-readdir": "^2.0.0"
-    }
+  "name": "cosmia-core",
+  "version": "0.2.1",
+  "description": "Content Oriented Static Management for Internet Applications",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:theOutLiar/cosmia-core.git"
+  },
+  "scripts": {
+    "prestart": "npm prune && npm install",
+    "start": "npm run test",
+    "test": "./cli.js test/ && node test/app.js"
+  },
+  "bin": {
+    "cosmia": "./cli.js"
+  },
+  "author": "Christopher J Gore",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^1.1.3",
+    "handlebars": "^4.0.5",
+    "handlebars-helpers": "^0.7.5",
+    "htmlparser2": "^3.9.1",
+    "js-markdown-extra": "^1.2.4",
+    "lodash.assign": "^4.2.0",
+    "lodash.keys": "^4.2.0",
+    "markdown": "^0.5.0",
+    "mkdirp": "^0.5.1",
+    "recursive-readdir": "^2.0.0"
+  }
 }
