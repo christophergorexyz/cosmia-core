@@ -81,7 +81,15 @@ function _extractCustomPageElement(page, attribute, process) {
 }
 
 function _registerDataFile(name, content) {
-    siteData[path.basename(name)] = JSON.parse(content);
+    var splitPath = name.replace(dataDir + '/', '').split('/');
+    var treeNode = siteData;
+    var objectName = '';
+    var dataObject = JSON.parse(content);
+    while (splitPath.length) {
+        objectName = splitPath.shift();
+        treeNode[objectName] = splitPath.length ? Object.assign({}, treeNode[objectName]) : dataObject;
+        treeNode = treeNode[objectName];
+    }
 }
 
 function _registerPartialFile(name, content) {
