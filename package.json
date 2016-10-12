@@ -1,6 +1,6 @@
 {
   "name": "cosmia-core",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Content Oriented Static Management for Internet Applications",
   "main": "index.js",
   "repository": {
