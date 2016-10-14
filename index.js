@@ -162,12 +162,12 @@ function _registerAppComponents() {
     ]);
 }
 
-function _compilePage(page, silent = false) {
+function _compilePage(page, customData = {}, silent = false) {
 
     //TODO: make sure cosmia custom elements are set in a single pass.
     //as it stands, we'll need two new lines for each additional custom
     //element, but it could be reduced to one new line
-    var pageContext = Object.assign({}, siteData, page['cosmia-data']);
+    var pageContext = Object.assign({}, siteData, page['cosmia-data'], customData);
     pageContext['cosmia-script'] = page['cosmia-script'];
     pageContext['cosmia-data'] = page['cosmia-data'];
 
@@ -220,7 +220,7 @@ function _compilePages(outputDir, silent = false) {
     return new Promise((resolve, reject) => {
         for (var p of keys(pageData)) {
             try {
-                var pageBody = _compilePage(pageData[p], silent);
+                var pageBody = _compilePage(pageData[p], {}, silent);
                 var outputPath = path.resolve(pageData[p].path.replace(pagesDir, outputDir) + '.html');
 
                 //doing this stuff synchronously to avoid race conditions
@@ -280,8 +280,8 @@ function _cosmia(srcFolder, distFolder) {
 
 _cosmia.setup = _setup;
 _cosmia.compileSite = _compileSite;
-_cosmia.compilePage = function (pageName) {
-    return _compilePage(pageData[pageName], true);
+_cosmia.compilePage = function (pageName, customData = {}) {
+    return _compilePage(pageData[pageName], customData, true);
 };
 
 module.exports = _cosmia;

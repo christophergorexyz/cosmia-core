@@ -4,5 +4,7 @@
 var cosmia = require('../index');
 
 cosmia.setup('./test/src').then(() => {
-    console.log(cosmia.compilePage('sub-section/index'));
+    console.log(cosmia.compilePage('sub-section/index', {
+        title: 'my custom title'
+    }));
 });
