@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
 'use strict';
-let cosmia = require('./index');
+import cosmia from './index';
 
-let chalk = require('chalk');
+import chalk from 'chalk';
 
-let path = require('path');
+import path from 'path';
 
 let userArgs = process.argv.slice(2);
 let sourceDirectory = path.resolve('src');
@@ -23,8 +23,7 @@ function printUsage() {
     console.log('Passing the `-h` option will print this message.\n');
 }
 
-//main
-(() => {
+(()=>{ //main
     if (userArgs.length > 2) {
         console.error(chalk.red('too many parameters'));
         printUsage();
@@ -46,5 +45,4 @@ function printUsage() {
     }
 
     cosmia(sourceDirectory, outputDirectory);
-
 })();
