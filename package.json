@@ -1,43 +1,42 @@
 {
-    "name": "cosmia-core",
-    "version": "0.4.0",
-    "description": "Content Oriented Static Management for Internet Applications",
-    "main": "dist/index.js",
-    "repository": {
-        "type": "git",
-        "url": "git@github.com:theOutLiar/cosmia-core.git"
-    },
-    "scripts": {
-        "prestart": "npm prune && npm install",
-        "start": "npm run test",
-        "test": "./dist/cli.js test/ && node test/app.js",
-        "build": "babel src --out-dir dist",
-        "prepublish": "npm run build"
-    },
-    "bin": {
-        "cosmia": "./dist/cli.js"
-    },
-    "babel": {
-        "presets": "es2015",
-        "sourceMaps": true,
-        "sourceRoot": "src"
-    },
-    "author": "Christopher J Gore",
-    "license": "MIT",
-    "dependencies": {
-        "chalk": "^1.1.3",
-        "handlebars": "^4.0.5",
-        "handlebars-helpers": "^0.7.5",
-        "htmlparser2": "^3.9.1",
-        "js-markdown-extra": "^1.2.4",
-        "lodash.keys": "^4.2.0",
-        "markdown": "^0.5.0",
-        "mkdirp": "^0.5.1",
-        "recursive-readdir": "^2.1.0"
-    },
-    "devDependencies": {
-        "babel-cli": "^6.18.0",
-        "babel-preset-es2015": "^6.18.0",
-        "babelify": "^7.3.0"
-    }
+  "name": "cosmia-core",
+  "version": "0.4.0",
+  "description": "Content Oriented Static Management for Internet Applications",
+  "main": "dist/index.js",
+  "bin": {
+    "cosmia": "./dist/cli.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:theOutLiar/cosmia-core.git"
+  },
+  "scripts": {
+    "prestart": "npm prune && npm install",
+    "start": "npm run test",
+    "test": "./dist/cli.js test/ && node test/app.js",
+    "build": "babel src --out-dir dist",
+    "prepublish": "npm run build"
+  },
+  "babel": {
+    "presets": "es2015",
+    "sourceMaps": true,
+    "sourceRoot": "src"
+  },
+  "author": "Christopher J Gore",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^1.1.3",
+    "handlebars": "^4.0.5",
+    "handlebars-helpers": "^0.7.5",
+    "htmlparser2": "^3.9.1",
+    "js-markdown-extra": "^1.2.4",
+    "lodash.keys": "^4.2.0",
+    "markdown": "^0.5.0",
+    "mkdirp": "^0.5.1",
+    "recursive-readdir": "^2.1.0"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.18.0",
+    "babel-preset-es2015": "^6.18.0"
+  }
 }

@@ -1,18 +1,20 @@
 'use strict';
 
-let fs = require('fs');
-let path = require('path');
-let mkdirp = require('mkdirp'); //like `mkdir -p`
+import fs from 'fs';
+import path from 'path';
+import mkdirp from 'mkdirp'; //like `mkdir -p`
 
-let keys = require('lodash.keys');
+import keys from 'lodash.keys';
 
-let recursiveReaddir = require('recursive-readdir');
-let handlebars = require('handlebars');
+import recursiveReaddir from 'recursive-readdir';
+import handlebars from 'handlebars';
 
-let htmlparser = require('htmlparser2');
-let domutils = htmlparser.DomUtils;
+import htmlparser, {
+    DomUtils
+}
+from 'htmlparser2';
 
-let chalk = require('chalk');
+import chalk from 'chalk';
 
 const EXTENSION_HBS = '.hbs';
 const EXTENSION_JSON = '.json';
@@ -23,6 +25,7 @@ const COSMIA_DATA_PATH = 'views/data';
 const COSMIA_LAYOUT_PATH = 'views/layouts';
 const COSMIA_HELPERS_PATH = 'views/helpers';
 const COSMIA_PAGES_PATH = 'views/pages';
+const COSMIA_COLLECTIONS_PATH = 'views/collections';
 
 const COSMIA_SCRIPT = 'cosmia-script';
 const COSMIA_DATA = 'cosmia-data';
@@ -49,7 +52,7 @@ function _extractCustomPageElement(page, attribute, process) {
     var dom = new htmlparser.parseDOM(page.content);
 
     //find an element with the specified `attribute`
-    var dataElements = domutils.find((e) =>
+    var dataElements = DomUtils.find((e) =>
         (e.attribs !== undefined && e.attribs[attribute] !== undefined),
         dom, true);
 
@@ -72,10 +75,10 @@ function _extractCustomPageElement(page, attribute, process) {
             }
         }
 
-        //this doesn't seem like the fastest approach, but the domUtils removeElement call
+        //this doesn't seem like the fastest approach, but the DomUtils removeElement call
         //doesn't appear to work correctly/how i'd expect it to, and is not documented,
         //so falling back to a string operation
-        page.content = domutils.getOuterHTML(dom).replace(domutils.getOuterHTML(element), '');
+        page.content = DomUtils.getOuterHTML(dom).replace(DomUtils.getOuterHTML(element), '');
     }
     return page;
 }
@@ -101,7 +104,7 @@ function _registerLayoutFile(name, content) {
         content: content,
         path: name
     };
-    layout = _extractCustomPageElement(layout, COSMIA_TEMPLATE_DATA, (e) => JSON.parse(domutils.getInnerHTML(e)));
+    layout = _extractCustomPageElement(layout, COSMIA_TEMPLATE_DATA, (e) => JSON.parse(DomUtils.getInnerHTML(e)));
     layout.compile = handlebars.compile(layout.content);
     handlebarsLayouts[path.basename(name)] = layout;
 }
@@ -115,8 +118,8 @@ function _processPage(name, content) {
         path: name,
         content: content
     };
-    page = _extractCustomPageElement(page, COSMIA_DATA, (e) => JSON.parse(domutils.getInnerHTML(e)));
-    page = _extractCustomPageElement(page, COSMIA_SCRIPT, (e) => domutils.getOuterHTML(e));
+    page = _extractCustomPageElement(page, COSMIA_DATA, (e) => JSON.parse(DomUtils.getInnerHTML(e)));
+    page = _extractCustomPageElement(page, COSMIA_SCRIPT, (e) => DomUtils.getOuterHTML(e));
     var keyName = path.join('.', name.replace(pagesDir, ''));
     pageData[keyName] = page;
 }
@@ -243,6 +246,7 @@ function _setupCosmia(srcFolder, silent = false) {
     helpersDir = path.resolve(srcFolder, COSMIA_HELPERS_PATH);
     pagesDir = path.resolve(srcFolder, COSMIA_PAGES_PATH);
 
+
     return Promise.resolve()
         .then(() => {
             return _registerAppComponents().then(() => {
@@ -258,6 +262,7 @@ function _setupCosmia(srcFolder, silent = false) {
                 }
             });
         });
+
 }
 
 function _setup(srcFolder) {

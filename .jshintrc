@@ -10,5 +10,6 @@
     "undef": true,
     "unused": true,
     "strict": true,
-    "esnext":true
+    "esnext": true,
+    "esversion": 7
 }
