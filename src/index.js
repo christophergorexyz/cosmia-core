@@ -238,7 +238,7 @@ function _compilePages(outputDir, silent = false) {
     });
 }
 
-function _setupCosmia(srcFolder, silent = false) {
+function _setupCosmia(srcFolder, silent = false, customData ={}) {
 
     partialsDir = path.resolve(srcFolder, COSMIA_PARTIAL_PATH);
     dataDir = path.resolve(srcFolder, COSMIA_DATA_PATH);
@@ -257,6 +257,7 @@ function _setupCosmia(srcFolder, silent = false) {
         })
         .then(() => {
             return _processDirectory(pagesDir, EXTENSION_HBS, _processPage).then(() => {
+                siteData = Object.assign({}, siteData, customData)
                 if (!silent) {
                     console.log(chalk.blue(PACKAGE_NAME) + ': data extracted');
                 }
@@ -265,8 +266,8 @@ function _setupCosmia(srcFolder, silent = false) {
 
 }
 
-function _setup(srcFolder) {
-    return _setupCosmia(srcFolder, true).catch((err) => {
+function _setup(srcFolder, customData={}) {
+    return _setupCosmia(srcFolder, true, customData).catch((err) => {
         console.error(chalk.red(err));
     });
 }
@@ -277,8 +278,8 @@ function _compileSite(distFolder) {
     });
 }
 
-function _cosmia(srcFolder, distFolder) {
-    _setup(srcFolder).then(() => {
+function _cosmia(srcFolder, distFolder, customData = {}) {
+    _setup(srcFolder, customData).then(() => {
         _compileSite(distFolder);
     });
 }

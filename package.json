@@ -1,6 +1,6 @@
 {
   "name": "cosmia-core",
-  "version": "0.4.0",
+  "version": "0.5.1",
   "description": "Content Oriented Static Management for Internet Applications",
   "main": "dist/index.js",
   "bin": {
@@ -13,6 +13,7 @@
   "scripts": {
     "prestart": "npm prune && npm install",
     "start": "npm run test",
+    "pretest": "npm prune && npm install",
     "test": "./dist/cli.js test/ && node test/app.js",
     "build": "babel src --out-dir dist",
     "prepublish": "npm run build"
