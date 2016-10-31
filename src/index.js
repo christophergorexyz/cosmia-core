@@ -39,12 +39,14 @@ const ERORR_MESSAGE_COSMIA_CUSTOM_ELEMENT = 'Only one of a given type of cosmia 
 var siteData = {};
 var handlebarsLayouts = {};
 var pageData = {};
+var collectionData = {};
 
 var partialsDir = '';
 var dataDir = '';
 var layoutsDir = '';
 var helpersDir = '';
 var pagesDir = '';
+var collectionsDir = '';
 
 //Used to pull an element with a cosmia-* attribute from the .hbs file
 function _extractCustomPageElement(page, attribute, process) {
@@ -124,6 +126,12 @@ function _processPage(name, content) {
     pageData[keyName] = page;
 }
 
+function _processCollection(name, content) {
+    var collection = JSON.parse(content);
+    var keyName = path.join('.', name.replace(collectionsDir, ''));
+    collectionData[keyName] = collection;
+}
+
 //read all the files of a given type in a directory and execute a process on their content
 //the processor takes the form function (name, content){ ... }
 function _processDirectory(dirName, extension, processor) {
@@ -162,7 +170,9 @@ function _registerAppComponents() {
         _processDirectory(dataDir, EXTENSION_JSON, _registerDataFile),
         _processDirectory(layoutsDir, EXTENSION_HBS, _registerLayoutFile),
         _processDirectory(helpersDir, EXTENSION_JS, _registerHelperFile)
-    ]);
+    ]).then(() => {
+        console.log(`${PACKAGE_NAME}: Components registered`);
+    });
 }
 
 function _compilePage(page, customData = {}, silent = false) {
@@ -189,7 +199,7 @@ function _compilePage(page, customData = {}, silent = false) {
     var pageBody = compiledPage(pageContext);
 
     if (handlebarsLayouts[pageLayoutName] === undefined && !silent) {
-        console.warn(PACKAGE_NAME + ": " + chalk.yellow("WARNING: Layout") + " `" + pageLayoutName + "` " + chalk.yellow("not found. Using") + " `default` " + chalk.yellow('instead.'));
+        console.warn(chalk.yellow(`${PACKAGE_NAME}: WARNING: Layout ${pageLayoutName} not found. Using default instead.`));
         pageLayoutName = 'default';
     }
 
@@ -238,47 +248,53 @@ function _compilePages(outputDir, silent = false) {
     });
 }
 
-function _setupCosmia(srcFolder, silent = false) {
+function _compileCollections(outputDir, silent = false){
+    return new Promise((resolve, reject)=>{
+        for (var c of keys(collectionData)){
+            var indexLayout = collectionData[c]['index-layout'];
+            var singleLayout = collectionData[c]['single-layout'];
+            var archiveLayout = collectionData[c]['archive-layout'];
+        }
+    });
+}
+
+function _setupCosmia(srcFolder, silent = false, customData = {}) {
 
     partialsDir = path.resolve(srcFolder, COSMIA_PARTIAL_PATH);
     dataDir = path.resolve(srcFolder, COSMIA_DATA_PATH);
     layoutsDir = path.resolve(srcFolder, COSMIA_LAYOUT_PATH);
     helpersDir = path.resolve(srcFolder, COSMIA_HELPERS_PATH);
     pagesDir = path.resolve(srcFolder, COSMIA_PAGES_PATH);
+    collectionsDir = path.resolve(srcFolder, COSMIA_COLLECTIONS_PATH);
 
-
-    return Promise.resolve()
-        .then(() => {
-            return _registerAppComponents().then(() => {
-                if (!silent) {
-                    console.log(chalk.blue(PACKAGE_NAME) + ': components registered');
-                }
-            });
-        })
-        .then(() => {
-            return _processDirectory(pagesDir, EXTENSION_HBS, _processPage).then(() => {
-                if (!silent) {
-                    console.log(chalk.blue(PACKAGE_NAME) + ': data extracted');
-                }
-            });
-        });
-
+    return Promise.all(
+        _registerAppComponents(),
+        _processDirectory(pagesDir, EXTENSION_HBS, _processPage),
+        _processDirectory(collectionsDir, EXTENSION_JSON, _processCollection)
+    ).then(() => {
+        siteData = Object.assign({}, siteData, customData);
+        if (!silent) {
+            console.log(`${PACKAGE_NAME}: data extracted`);
+        }
+    });
 }
 
-function _setup(srcFolder) {
-    return _setupCosmia(srcFolder, true).catch((err) => {
+function _setup(srcFolder, customData) {
+    return _setupCosmia(srcFolder, true, customData).catch((err) => {
         console.error(chalk.red(err));
     });
 }
 
 function _compileSite(distFolder) {
-    return _compilePages(distFolder).catch((err) => {
+    return _compileCollections(distFolder)
+        .then(_compilePages(distFolder))
+        .catch((err) => {
         console.error(chalk.red(err));
     });
 }
 
-function _cosmia(srcFolder, distFolder) {
-    _setup(srcFolder).then(() => {
+function _cosmia(srcFolder, distFolder, customData={}) {
+    _setup(srcFolder, customData).then(() => {
         _compileSite(distFolder);
     });
 }

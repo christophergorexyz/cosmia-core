@@ -3,7 +3,7 @@
 
 var cosmia = require('../dist/index');
 
-cosmia.setup('./test/src').then(() => {
+cosmia.setup('./test/src', {'copyright-year': new Date().getFullYear() }).then(() => {
     console.log(cosmia.compilePage('sub-section/index', {
         title: 'my custom title'
     }));
