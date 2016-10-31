@@ -269,8 +269,8 @@ function _setupCosmia(srcFolder, silent = false, customData = {}) {
 
     return Promise.all(
         _registerAppComponents(),
-        _processDirectory(pagesDir, EXTENSION_HBS, _processPage),
-        _processDirectory(collectionsDir, EXTENSION_JSON, _processCollection)
+        _processDirectory(pagesDir, EXTENSION_HBS, _processPage)//,
+        //_processDirectory(collectionsDir, EXTENSION_JSON, _processCollection)
     ).then(() => {
         siteData = Object.assign({}, siteData, customData);
         if (!silent) {
