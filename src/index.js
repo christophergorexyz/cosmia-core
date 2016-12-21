@@ -45,6 +45,7 @@ var dataDir = '';
 var layoutsDir = '';
 var helpersDir = '';
 var pagesDir = '';
+var collectionsDir = '';
 
 //Used to pull an element with a cosmia-* attribute from the .hbs file
 function _extractCustomPageElement(page, attribute, process) {
@@ -111,6 +112,10 @@ function _registerLayoutFile(name, content) {
 
 function _registerHelperFile(name, content) {
     handlebars.registerHelper(require(path.resolve(name)));
+}
+
+function _processCollection(name, content){
+    var collection = JSON.parse(content);
 }
 
 function _processPage(name, content) {
@@ -245,7 +250,7 @@ function _setupCosmia(srcFolder, silent = false, customData ={}) {
     layoutsDir = path.resolve(srcFolder, COSMIA_LAYOUT_PATH);
     helpersDir = path.resolve(srcFolder, COSMIA_HELPERS_PATH);
     pagesDir = path.resolve(srcFolder, COSMIA_PAGES_PATH);
-
+    collectionsDir = path.resolve(srcFolder, COSMIA_COLLECTIONS_PATH);
 
     return Promise.resolve()
         .then(() => {
@@ -255,9 +260,16 @@ function _setupCosmia(srcFolder, silent = false, customData ={}) {
                 }
             });
         })
+        .then(()=>{
+            return _processDirectory(collectionsDir, EXTENSION_JSON, _processCollection).then(()=>{
+                if (!silent) {
+                    console.log(chalk.blue(PACKAGE_NAME) + ': collections registered');
+                }
+            });
+        })
         .then(() => {
             return _processDirectory(pagesDir, EXTENSION_HBS, _processPage).then(() => {
-                siteData = Object.assign({}, siteData, customData)
+                siteData = Object.assign({}, siteData, customData);
                 if (!silent) {
                     console.log(chalk.blue(PACKAGE_NAME) + ': data extracted');
                 }
@@ -279,7 +291,7 @@ function _compileSite(distFolder) {
 }
 
 function _cosmia(srcFolder, distFolder, customData = {}) {
-    _setup(srcFolder, customData).then(() => {
+    return _setup(srcFolder, customData).then(() => {
         _compileSite(distFolder);
     });
 }
