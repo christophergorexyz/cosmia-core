@@ -1,0 +1,10 @@
+{
+    "http://schema.org/image": {
+        "@id": "http://placekitten.com/300/300"
+    },
+    "http://schema.org/name": "Default",
+    "http://cosmia.xyz/schema/view": "components/layouts/default.hbs",
+    "http://cosmia.xyz/schema/layout-class": "default",
+    "http://cosmia.xyz/schema/parent-layout": null
+
+}

@@ -20,118 +20,25 @@ const EXTENSION_HBS = '.hbs';
 const EXTENSION_JSON = '.json';
 const EXTENSION_JS = '.js';
 
-const COSMIA_PARTIAL_PATH = 'views/partials';
-const COSMIA_DATA_PATH = 'views/data';
-const COSMIA_LAYOUT_PATH = 'views/layouts';
-const COSMIA_HELPERS_PATH = 'views/helpers';
-const COSMIA_PAGES_PATH = 'views/pages';
-const COSMIA_COLLECTIONS_PATH = 'views/collections';
-
-const COSMIA_SCRIPT = 'cosmia-script';
-const COSMIA_DATA = 'cosmia-data';
-const COSMIA_TEMPLATE_DATA = 'cosmia-template-data';
+const COSMIA_PARTIAL_PATH = 'partials';
+const COSMIA_CONFIG_PATH = 'config';
+const COSMIA_HELPERS_PATH = 'helpers';
+const COSMIA_SITE_PATH = 'components';
 
 const PACKAGE_NAME = chalk.blue('cosmia-core');
-
-const ERROR_MESSAGE_COSMIA_CUSTOM_CHILD = 'cosmia custom elements may only have a single text child.';
-const ERORR_MESSAGE_COSMIA_CUSTOM_ELEMENT = 'Only one of a given type of cosmia custom element is allowed per page.';
 
 var siteData = {};
 var handlebarsLayouts = {};
 var pageData = {};
 
 var partialsDir = '';
-var dataDir = '';
-var layoutsDir = '';
+var configDir = '';
 var helpersDir = '';
-var pagesDir = '';
-var collectionsDir = '';
-
-//Used to pull an element with a cosmia-* attribute from the .hbs file
-function _extractCustomPageElement(page, attribute, process) {
-    //parse the html and dig out the relevant data element by custom attribute
-    var dom = new htmlparser.parseDOM(page.content);
-
-    //find an element with the specified `attribute`
-    var dataElements = DomUtils.find((e) =>
-        (e.attribs !== undefined && e.attribs[attribute] !== undefined),
-        dom, true);
-
-    if (dataElements.length > 1) {
-        throw ERORR_MESSAGE_COSMIA_CUSTOM_ELEMENT;
-    }
-
-    if (dataElements.length) {
-        var element = dataElements[0];
-
-        if (element.children.length > 1) {
-            throw ERROR_MESSAGE_COSMIA_CUSTOM_CHILD;
-        }
-
-        if (element.children.length) {
-            try {
-                page[attribute] = process(element);
-            } catch (err) {
-                throw page.path + '\n' + err;
-            }
-        }
-
-        //this doesn't seem like the fastest approach, but the DomUtils removeElement call
-        //doesn't appear to work correctly/how i'd expect it to, and is not documented,
-        //so falling back to a string operation
-        page.content = DomUtils.getOuterHTML(dom).replace(DomUtils.getOuterHTML(element), '');
-    }
-    return page;
-}
-
-function _registerDataFile(name, content) {
-    var splitPath = name.replace(dataDir + '/', '').split('/');
-    var treeNode = siteData;
-    var objectName = '';
-    var dataObject = JSON.parse(content);
-    while (splitPath.length) {
-        objectName = splitPath.shift();
-        treeNode[objectName] = splitPath.length ? Object.assign({}, treeNode[objectName]) : dataObject;
-        treeNode = treeNode[objectName];
-    }
-}
-
-function _registerPartialFile(name, content) {
-    handlebars.registerPartial(path.basename(name), content);
-}
-
-function _registerLayoutFile(name, content) {
-    var layout = {
-        content: content,
-        path: name
-    };
-    layout = _extractCustomPageElement(layout, COSMIA_TEMPLATE_DATA, (e) => JSON.parse(DomUtils.getInnerHTML(e)));
-    layout.compile = handlebars.compile(layout.content);
-    handlebarsLayouts[path.basename(name)] = layout;
-}
-
-function _registerHelperFile(name, content) {
-    handlebars.registerHelper(require(path.resolve(name)));
-}
-
-function _processCollection(name, content){
-    var collection = JSON.parse(content);
-}
-
-function _processPage(name, content) {
-    var page = {
-        path: name,
-        content: content
-    };
-    page = _extractCustomPageElement(page, COSMIA_DATA, (e) => JSON.parse(DomUtils.getInnerHTML(e)));
-    page = _extractCustomPageElement(page, COSMIA_SCRIPT, (e) => DomUtils.getOuterHTML(e));
-    var keyName = path.join('.', name.replace(pagesDir, ''));
-    pageData[keyName] = page;
-}
+var siteDir = '';
 
 //read all the files of a given type in a directory and execute a process on their content
 //the processor takes the form function (name, content){ ... }
-function _processDirectory(dirName, extension, processor) {
+/*function _processDirectory(dirName, extension, processor) {
     return new Promise((resolve, reject) => {
         recursiveReaddir(dirName, (err, files) => {
             if (err) {
@@ -155,19 +62,50 @@ function _processDirectory(dirName, extension, processor) {
             return resolve();
         });
     });
+}*/
+
+function _processDirectory(dirName, processor) {
+    return new Promise((resolve, reject) => {
+        recursiveReaddir(dirName, (err, files) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+            files.forEach((filename) => {
+                var nameWithoutExtension = path.resolve(path.dirname(filename), path.basename(filename, path.extname(filename)));
+                var fileContent = fs.readFileSync(path.resolve(dirName, filename), 'utf8');
+                try {
+                    processor(nameWithoutExtension, fileContent);
+                } catch (err) {
+                    reject(err);
+                    return;
+                }
+
+            });
+
+            return resolve();
+        });
+    });
 }
 
-function _registerAppComponents() {
-    //register assemble's handlebars helpers
-    handlebars.registerHelper(require('handlebars-helpers')());
+function _registerConfigFile(name, content) {
+    var splitPath = name.replace(configDir + '/', '').split('/');
+    var treeNode = siteData;
+    var objectName = '';
+    var dataObject = JSON.parse(content);
+    while (splitPath.length) {
+        objectName = splitPath.shift();
+        treeNode[objectName] = splitPath.length ? Object.assign({}, treeNode[objectName]) : dataObject;
+        treeNode = treeNode[objectName];
+    }
+}
 
-    //register custom layouts, partials, data, and helpers
-    return Promise.all([
-        _processDirectory(partialsDir, EXTENSION_HBS, _registerPartialFile),
-        _processDirectory(dataDir, EXTENSION_JSON, _registerDataFile),
-        _processDirectory(layoutsDir, EXTENSION_HBS, _registerLayoutFile),
-        _processDirectory(helpersDir, EXTENSION_JS, _registerHelperFile)
-    ]);
+function _registerPartialFile(name, content) {
+    handlebars.registerPartial(path.basename(name), content);
+}
+
+function _registerHelperFile(name, content) {
+    handlebars.registerHelper(require(path.resolve(name)));
 }
 
 function _compilePage(page, customData = {}, silent = false) {
@@ -224,6 +162,18 @@ function _compilePage(page, customData = {}, silent = false) {
     return pageBody;
 }
 
+//TODO: probably wise to hold onto this for reference for the moment, and reuse for nested components
+/*function _registerLayoutFile(name, content) {
+    var layout = {
+        content: content,
+        path: name
+    };
+    layout = _extractCustomPageElement(layout, COSMIA_TEMPLATE_DATA, (e) => JSON.parse(DomUtils.getInnerHTML(e)));
+    layout.compile = handlebars.compile(layout.content);
+    handlebarsLayouts[path.basename(name)] = layout;
+}*/
+
+
 function _compilePages(outputDir, silent = false) {
     return new Promise((resolve, reject) => {
         for (var p of keys(pageData)) {
@@ -243,42 +193,47 @@ function _compilePages(outputDir, silent = false) {
     });
 }
 
-function _setupCosmia(srcFolder, silent = false, customData ={}) {
+function _processSite(name, content) {
+    var page = {
+        path: name,
+        content: content
+    };
+
+    var keyName = path.join('.', name.replace(siteDir, ''));
+    pageData[keyName] = page;
+}
+
+function _setupCosmia(srcFolder, silent = false, customData = {}) {
 
     partialsDir = path.resolve(srcFolder, COSMIA_PARTIAL_PATH);
-    dataDir = path.resolve(srcFolder, COSMIA_DATA_PATH);
-    layoutsDir = path.resolve(srcFolder, COSMIA_LAYOUT_PATH);
+    configDir = path.resolve(srcFolder, COSMIA_CONFIG_PATH);
     helpersDir = path.resolve(srcFolder, COSMIA_HELPERS_PATH);
-    pagesDir = path.resolve(srcFolder, COSMIA_PAGES_PATH);
-    collectionsDir = path.resolve(srcFolder, COSMIA_COLLECTIONS_PATH);
+    siteDir = path.resolve(srcFolder, COSMIA_SITE_PATH);
 
     return Promise.resolve()
         .then(() => {
-            return _registerAppComponents().then(() => {
+            handlebars.registerHelper(require('handlebars-helpers')());
+            return Promise.all([
+                _processDirectory(configDir, EXTENSION_JSON, _registerConfigFile),
+                _processDirectory(partialsDir, EXTENSION_HBS, _registerPartialFile),
+                _processDirectory(helpersDir, EXTENSION_JS, _registerHelperFile)
+            ]).then(() => {
                 if (!silent) {
                     console.log(chalk.blue(PACKAGE_NAME) + ': components registered');
                 }
             });
         })
-        .then(()=>{
-            return _processDirectory(collectionsDir, EXTENSION_JSON, _processCollection).then(()=>{
-                if (!silent) {
-                    console.log(chalk.blue(PACKAGE_NAME) + ': collections registered');
-                }
-            });
-        })
         .then(() => {
-            return _processDirectory(pagesDir, EXTENSION_HBS, _processPage).then(() => {
+            return _processDirectory(siteDir, EXTENSION_HBS, _processSite).then(() => {
                 siteData = Object.assign({}, siteData, customData);
                 if (!silent) {
                     console.log(chalk.blue(PACKAGE_NAME) + ': data extracted');
                 }
             });
         });
-
 }
 
-function _setup(srcFolder, customData={}) {
+function _setup(srcFolder, customData = {}) {
     return _setupCosmia(srcFolder, true, customData).catch((err) => {
         console.error(chalk.red(err));
     });
