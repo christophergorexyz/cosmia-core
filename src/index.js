@@ -120,7 +120,6 @@ function _processPage(name, content) {
     };
     page = _extractCustomPageElement(page, COSMIA_DATA, (e) => JSON.parse(DomUtils.getInnerHTML(e)));
     page = _extractCustomPageElement(page, COSMIA_SCRIPT, (e) => DomUtils.getOuterHTML(e));
-    page[COSMIA_DATA].path = name;
     var keyName = path.join('.', name.replace(pagesDir, ''));
     pageData[keyName] = page;
 }
