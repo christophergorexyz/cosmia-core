@@ -11,5 +11,6 @@
     "unused": true,
     "strict": true,
     "esnext": true,
-    "esversion": 7
+    "esversion": 7,
+    "sub": true
 }

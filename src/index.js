@@ -19,6 +19,7 @@ import chalk from 'chalk';
 const EXTENSION_HBS = '.hbs';
 const EXTENSION_JSON = '.json';
 const EXTENSION_JS = '.js';
+const EXTENSION_MD = '.md';
 
 const COSMIA_PARTIAL_PATH = 'views/partials';
 const COSMIA_DATA_PATH = 'views/data';
@@ -30,6 +31,8 @@ const COSMIA_COLLECTIONS_PATH = 'views/collections';
 const COSMIA_SCRIPT = 'cosmia-script';
 const COSMIA_DATA = 'cosmia-data';
 const COSMIA_TEMPLATE_DATA = 'cosmia-template-data';
+const COSMIA_COLLECTION_DATA = 'cosmia-collection-data';
+const COSMIA_COLLECTION_PREFIX = 'cosmia-collection-';
 
 const PACKAGE_NAME = chalk.blue('cosmia-core');
 
@@ -47,6 +50,7 @@ var layoutsDir = '';
 var helpersDir = '';
 var pagesDir = '';
 var collectionsDir = '';
+var srcDir = '';
 
 //Used to pull an element with a cosmia-* attribute from the .hbs file
 function _extractCustomPageElement(page, attribute, process) {
@@ -85,7 +89,7 @@ function _extractCustomPageElement(page, attribute, process) {
     return page;
 }
 
-function _registerDataFile(name, content) {
+function _registerDataFile(name, content, dirName) {
     var splitPath = name.replace(dataDir + '/', '').split('/');
     var treeNode = siteData;
     var objectName = '';
@@ -97,11 +101,11 @@ function _registerDataFile(name, content) {
     }
 }
 
-function _registerPartialFile(name, content) {
+function _registerPartialFile(name, content, dirName) {
     handlebars.registerPartial(path.basename(name), content);
 }
 
-function _registerLayoutFile(name, content) {
+function _registerLayoutFile(name, content, dirName) {
     var layout = {
         content: content,
         path: name
@@ -111,30 +115,24 @@ function _registerLayoutFile(name, content) {
     handlebarsLayouts[path.basename(name)] = layout;
 }
 
-function _registerHelperFile(name, content) {
+function _registerHelperFile(name, content, dirName) {
     handlebars.registerHelper(require(path.resolve(name)));
 }
 
-function _processPage(name, content) {
+function _processPage(name, content, dirName) {
     var page = {
         path: name,
         content: content
     };
     page = _extractCustomPageElement(page, COSMIA_DATA, (e) => JSON.parse(DomUtils.getInnerHTML(e)));
     page = _extractCustomPageElement(page, COSMIA_SCRIPT, (e) => DomUtils.getOuterHTML(e));
-    var keyName = path.join('.', name.replace(pagesDir, ''));
+    var keyName = path.join('.', name.replace(dirName, ''));
     pageData[keyName] = page;
 }
 
-function _processCollection(name, content) {
-    var collection = JSON.parse(content);
-    var keyName = path.join('.', name.replace(collectionsDir, ''));
-    collectionData[keyName] = collection;
-}
-
 //read all the files of a given type in a directory and execute a process on their content
-//the processor takes the form function (name, content){ ... }
-function _processDirectory(dirName, extension, processor) {
+//the processor takes the form function (name, content, dirName, key){ ... }
+function _processDirectory(dirName, extension, processor, key) {
     return new Promise((resolve, reject) => {
         recursiveReaddir(dirName, (err, files) => {
             if (err) {
@@ -146,18 +144,60 @@ function _processDirectory(dirName, extension, processor) {
 
                     var nameWithoutExtension = path.resolve(path.dirname(filename), path.basename(filename, extension));
                     var fileContent = fs.readFileSync(path.resolve(dirName, filename), 'utf8');
-                    try {
-                        processor(nameWithoutExtension, fileContent);
-                    } catch (err) {
+
+                    new Promise((resolve, reject) => {
+                        try {
+                            processor(nameWithoutExtension, fileContent, dirName, key);
+                        } catch (err) {
+                            reject(err);
+                            return;
+                        }
+                    }).catch((err) => {
                         reject(err);
-                        return;
-                    }
+                    });
                 }
             });
-
             return resolve();
         });
+    }).catch((err) => {
+        console.error(err);
     });
+}
+
+//handle collection content
+function _processCollectionFile(name, content, dirName, key) {
+    var data = collectionData[key];
+    name = name.replace(dirName, '');
+    name = (data['single-path'] ? data['single-path'] : data['index-path']) + name;
+    var page = {
+        path: name,
+        content: content
+    };
+
+    var keyName = path.join('.', name);
+    for (var field of keys(data['content-fields'])) {
+        page = _extractCustomPageElement(page, `${COSMIA_COLLECTION_PREFIX}${field}`, (e) => DomUtils.getInnerHTML(e));
+        page = _extractCustomPageElement(page, COSMIA_COLLECTION_DATA, (e) => JSON.parse(DomUtils.getInnerHTML(e)));
+    }
+
+    page[COSMIA_DATA] = Object.assign({}, page[`${COSMIA_COLLECTION_PREFIX}${field}`], page[COSMIA_COLLECTION_DATA]);
+    page[COSMIA_DATA]['layout'] = collectionData[key]['single-layout'];
+    pageData[keyName] = page;
+    collectionData[key]['page'] = page;
+    console.log('processed collection file...');
+}
+
+//handle collection meta data
+function _processCollectionData(name, content, dirName) {
+    console.log('processing collection data..');
+    var collection = JSON.parse(content);
+    var keyName = path.join('.', name.replace(dirName, ''));
+    collectionData[keyName] = collection;
+    var collectionSourceDir = path.resolve(srcDir, collectionData[keyName]['source']);
+    _processDirectory(collectionSourceDir, EXTENSION_MD, _processCollectionFile, keyName)
+        .catch((err) => {
+            console.log('err');
+        });
 }
 
 function _registerAppComponents() {
@@ -165,18 +205,20 @@ function _registerAppComponents() {
     handlebars.registerHelper(require('handlebars-helpers')());
 
     //register custom layouts, partials, data, and helpers
-    return Promise.all([
+    return Promise.all(
         _processDirectory(partialsDir, EXTENSION_HBS, _registerPartialFile),
         _processDirectory(dataDir, EXTENSION_JSON, _registerDataFile),
         _processDirectory(layoutsDir, EXTENSION_HBS, _registerLayoutFile),
         _processDirectory(helpersDir, EXTENSION_JS, _registerHelperFile)
-    ]).then(() => {
+    ).then(() => {
         console.log(`${PACKAGE_NAME}: Components registered`);
+    }).catch((err) => {
+        console.error(err);
     });
 }
 
 function _compilePage(page, customData = {}, silent = false) {
-
+    console.log('compile page');
     //TODO: make sure cosmia custom elements are set in a single pass.
     //as it stands, we'll need two new lines for each additional custom
     //element, but it could be reduced to one new line
@@ -248,18 +290,9 @@ function _compilePages(outputDir, silent = false) {
     });
 }
 
-function _compileCollections(outputDir, silent = false){
-    return new Promise((resolve, reject)=>{
-        for (var c of keys(collectionData)){
-            var indexLayout = collectionData[c]['index-layout'];
-            var singleLayout = collectionData[c]['single-layout'];
-            var archiveLayout = collectionData[c]['archive-layout'];
-        }
-    });
-}
-
 function _setupCosmia(srcFolder, silent = false, customData = {}) {
 
+    srcDir = srcFolder;
     partialsDir = path.resolve(srcFolder, COSMIA_PARTIAL_PATH);
     dataDir = path.resolve(srcFolder, COSMIA_DATA_PATH);
     layoutsDir = path.resolve(srcFolder, COSMIA_LAYOUT_PATH);
@@ -268,14 +301,16 @@ function _setupCosmia(srcFolder, silent = false, customData = {}) {
     collectionsDir = path.resolve(srcFolder, COSMIA_COLLECTIONS_PATH);
 
     return Promise.all(
-        _registerAppComponents(),
-        _processDirectory(pagesDir, EXTENSION_HBS, _processPage),
-        _processDirectory(collectionsDir, EXTENSION_JSON, _processCollection)
+        _registerAppComponents() //,
+        //_processDirectory(pagesDir, EXTENSION_HBS, _processPage),
+        //_processDirectory(collectionsDir, EXTENSION_JSON, _processCollectionData) //collections overwrite pages
     ).then(() => {
         siteData = Object.assign({}, siteData, customData);
         if (!silent) {
             console.log(`${PACKAGE_NAME}: data extracted`);
         }
+    }).catch((err) => {
+        console.log(err);
     });
 }
 
@@ -286,16 +321,15 @@ function _setup(srcFolder, customData) {
 }
 
 function _compileSite(distFolder) {
-    return _compileCollections(distFolder)
-        .then(_compilePages(distFolder))
+    return _compilePages(distFolder)
         .catch((err) => {
-        console.error(chalk.red(err));
-    });
+            console.error(chalk.red(err));
+        });
 }
 
-function _cosmia(srcFolder, distFolder, customData={}) {
+function _cosmia(srcFolder, distFolder, customData = {}) {
     _setup(srcFolder, customData).then(() => {
-        _compileSite(distFolder);
+        //_compileSite(distFolder);
     });
 }
 

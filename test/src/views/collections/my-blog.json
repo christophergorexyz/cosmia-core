@@ -1,8 +1,29 @@
 {
-    "collection-source": "filesystem",
-    "collection-location": "content/my-blog",
-    "collection-sort-property": "published",
+    "source": "content/my-blog",
+    "sort-property": "published",
+    "index-path": "my-blog",
+    "single-path": null,
+    "archive-path": null,
     "index-layout": "blog-roll",
     "single-layout": "blog-post",
-    "archive-layout": "blog-archive"
+    "archive-layout": "blog-archive",
+    "meta-fields": {
+        "title": {
+            "type": "text"
+        },
+        "published": {
+            "type": "date"
+        },
+        "updated": {
+            "type": "date"
+        }
+    },
+    "content-fields": {
+        "content": {
+            "type": "textarea"
+        },
+        "summary": {
+            "type": "textarea"
+        }
+    }
 }
