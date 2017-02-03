@@ -4,4 +4,7 @@
 }, {
     "text": "Sub Section",
     "href": "/sub-section"
+}, {
+    "text":"My Blog",
+    "href": "/my-blog"
 }]
