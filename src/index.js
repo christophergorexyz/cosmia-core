@@ -172,10 +172,14 @@ function _processDirectory(dirName, extension, processor, key) {
 
 //handle collection content
 function _processCollectionFile(name, content, dirName, key) {
+    var data = collectionData[key];
+    var indexPath = path.join(pagesDir, data['index-path'], 'index');
+
     return new Promise(function (resolve, reject) {
-        var data = collectionData[key];
         name = name.replace(dirName, path.join(pagesDir, (data['single-path'] ? data['single-path'] : data['index-path'])));
         //name = (data['single-path'] ? data['single-path'] : data['index-path']) + name;
+        var isIndex = (name === indexPath);
+
         var page = {
             path: name,
             content: content
@@ -194,10 +198,15 @@ function _processCollectionFile(name, content, dirName, key) {
 
         page = _extractCustomPageElement(page, COSMIA_COLLECTION_DATA, (e) => JSON.parse(DomUtils.getInnerHTML(e)));
 
-        page[COSMIA_DATA] = Object.assign({}, cosmiaData, page[COSMIA_COLLECTION_DATA]);
-        page[COSMIA_DATA]['layout'] = collectionData[key]['single-layout'];
-        pageData[keyName] = page;
-        pageData[key][COSMIA_DATA]['collection-items'].push(page[COSMIA_DATA]);
+        if(isIndex){
+            page[COSMIA_DATA] = Object.assign({}, cosmiaData, page[COSMIA_COLLECTION_DATA], pageData[key][COSMIA_DATA]);
+            pageData[key] = Object.assign({}, pageData[key], page);
+        } else {
+            page[COSMIA_DATA] = Object.assign({}, cosmiaData, page[COSMIA_COLLECTION_DATA]);
+            page[COSMIA_DATA]['layout'] = collectionData[key]['single-layout'];
+            pageData[keyName] = page;
+            pageData[key][COSMIA_DATA]['collection-items'].push(page[COSMIA_DATA]);
+        }
 
         return resolve();
     });
