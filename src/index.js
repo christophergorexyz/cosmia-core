@@ -204,6 +204,7 @@ function _processCollectionFile(name, content, dirName, key) {
         } else {
             page[COSMIA_DATA] = Object.assign({}, cosmiaData, page[COSMIA_COLLECTION_DATA]);
             page[COSMIA_DATA]['layout'] = collectionData[key]['single-layout'];
+            page[COSMIA_DATA]['permalink'] = name.replace(pagesDir, '').replace('index', '');
             pageData[keyName] = page;
             pageData[key][COSMIA_DATA]['collection-items'].push(page[COSMIA_DATA]);
         }
@@ -215,7 +216,7 @@ function _processCollectionFile(name, content, dirName, key) {
 //handle collection meta data
 function _processCollectionData(name, content, dirName) {
     var collection = JSON.parse(content);
-    var keyName = path.join(pagesDir, collection['index-path']); //name.replace(dirName, pagesDir);
+    var keyName = path.join(collection['index-path']); //name.replace(dirName, pagesDir);
     collectionData[keyName] = collection;
     var collectionSourceDir = path.resolve(srcDir, collectionData[keyName]['source']);
 

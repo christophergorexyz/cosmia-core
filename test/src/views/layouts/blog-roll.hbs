@@ -9,7 +9,7 @@
 <div>
     <h1>Blog Roll</h1>
     {{#each collection-items}}
-    <h4>{{title}}</h4>
+    <h4><a href="{{permalink}}">{{title}}</a></h4>
     <p>{{summary}}</p>
     {{/each}}
 </div>
