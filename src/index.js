@@ -323,7 +323,6 @@ function _compilePages(outputDir, silent = false) {
 }
 
 function _setupCosmia(srcFolder, silent = false, customData = {}) {
-
     srcDir = srcFolder;
     partialsDir = path.resolve(srcFolder, COSMIA_PARTIAL_PATH);
     dataDir = path.resolve(srcFolder, COSMIA_DATA_PATH);
