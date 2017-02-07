@@ -91,7 +91,7 @@ function _extractCustomPageElement(page, attribute, process) {
 
 function _registerDataFile(name, content, dirName) {
     return Promise.resolve().then(() => {
-        var splitPath = name.replace(dataDir + '/', '').split('/');
+        var splitPath = name.replace(dataDir + path.sep, '').split(path.sep);
         var treeNode = siteData;
         var objectName = '';
         var dataObject = JSON.parse(content);
@@ -171,14 +171,15 @@ function _processDirectory(dirName, extension, processor, key) {
 }
 
 //handle collection content
-function _processCollectionFile(name, content, dirName, key) {
-    var data = collectionData[key];
-    var indexPath = path.join(pagesDir, data['index-path'], 'index');
-
+function _processCollectionFile(name, content, dirName, collectionKey) {
+    var data = collectionData[collectionKey];
+    var indexPath = path.join(pagesDir, data['path'], 'index');
+    var indexKey = path.join(collectionKey, 'index');
     return new Promise(function (resolve, reject) {
-        name = name.replace(dirName, path.join(pagesDir, (data['single-path'] ? data['single-path'] : data['index-path'])));
-        //name = (data['single-path'] ? data['single-path'] : data['index-path']) + name;
+        name = name.replace(dirName, path.join(pagesDir, data['path']));
         var isIndex = (name === indexPath);
+
+        var singleKey = path.join(name.replace(pagesDir + path.sep, ''));
 
         var page = {
             path: name,
@@ -193,20 +194,22 @@ function _processCollectionFile(name, content, dirName, key) {
             page = _extractCustomPageElement(page, fieldName, (e) => DomUtils.getInnerHTML(e));
 
             cosmiaData[field] = page[fieldName];
-            //page[fieldName] = page[fieldName];
+            delete page[fieldName];
         }
 
         page = _extractCustomPageElement(page, COSMIA_COLLECTION_DATA, (e) => JSON.parse(DomUtils.getInnerHTML(e)));
 
-        if(isIndex){
-            page[COSMIA_DATA] = Object.assign({}, cosmiaData, page[COSMIA_COLLECTION_DATA], pageData[key][COSMIA_DATA]);
-            pageData[key] = Object.assign({}, pageData[key], page);
+        if (isIndex) {
+            page[COSMIA_DATA] = Object.assign({}, cosmiaData, page[COSMIA_COLLECTION_DATA], pageData[indexKey][COSMIA_DATA]);
+            delete page[COSMIA_COLLECTION_DATA];
+            pageData[indexKey] = Object.assign({}, pageData[indexKey], page);
         } else {
             page[COSMIA_DATA] = Object.assign({}, cosmiaData, page[COSMIA_COLLECTION_DATA]);
-            page[COSMIA_DATA]['layout'] = collectionData[key]['single-layout'];
+            page[COSMIA_DATA]['layout'] = collectionData[collectionKey]['single-layout'];
             page[COSMIA_DATA]['permalink'] = name.replace(pagesDir, '').replace('index', '');
-            pageData[keyName] = page;
-            pageData[key][COSMIA_DATA]['collection-items'].push(page[COSMIA_DATA]);
+            pageData[singleKey] = page;
+            pageData[indexKey][COSMIA_DATA]['collection-items'].push(page[COSMIA_DATA]);
+            delete page[COSMIA_COLLECTION_DATA];
         }
 
         return resolve();
@@ -216,24 +219,20 @@ function _processCollectionFile(name, content, dirName, key) {
 //handle collection meta data
 function _processCollectionData(name, content, dirName) {
     var collection = JSON.parse(content);
-    var keyName = path.join(collection['index-path']); //name.replace(dirName, pagesDir);
+    var keyName = path.join(collection['path']); //name.replace(dirName, pagesDir);
     collectionData[keyName] = collection;
     var collectionSourceDir = path.resolve(srcDir, collectionData[keyName]['source']);
 
-    /*TODO SCRATCH*/
-    //TODO: generate index and archives here
-    var indexPath = path.join(pagesDir, collection['index-path'], 'index');
-    var page = {
-        path: indexPath,
-        content: ''
-    };
 
-    page[COSMIA_DATA] = {};
-    page[COSMIA_DATA]['layout'] = collection['index-layout'] ? collection['index-layout'] : 'default';
-    page[COSMIA_DATA]['collection-items'] = [];
-    /*END TODO SCRATCH*/
-
-    pageData[keyName] = page;
+    //index page must exist prior to actually processing the content
+    //so that we can add the collections to the data structure.
+    //similar treatment for archive pages in the future maybe.
+    var indexPage = {};
+    var indexKey = path.join(keyName, 'index');
+    indexPage[COSMIA_DATA] = {};
+    indexPage[COSMIA_DATA]['layout'] = collection['index-layout'] ? collection['index-layout'] : 'default';
+    indexPage[COSMIA_DATA]['collection-items'] = [];
+    pageData[indexKey] = indexPage;
 
     return _processDirectory(collectionSourceDir, EXTENSION_MD, _processCollectionFile, keyName);
 }
@@ -259,7 +258,7 @@ function _compilePage(page, customData = {}, silent = false) {
     pageContext['cosmia-script'] = page['cosmia-script'];
     pageContext['cosmia-data'] = page['cosmia-data'];
 
-    var canonicalPath = path.join('/', page.path.replace(pagesDir, '') + '.html');
+    var canonicalPath = path.join(path.sep, page.path.replace(pagesDir, '') + '.html');
 
     //ideally, everything should be an index.html file in the end
     //if it's not, we'll leave the full path in the canonical url

@@ -1,9 +1,7 @@
 {
     "source": "content/my-blog",
     "sort-property": "published",
-    "index-path": "my-blog",
-    "single-path": null,
-    "archive-path": null,
+    "path": "my-blog",
     "index-layout": "blog-roll",
     "single-layout": "blog-post",
     "archive-layout": "blog-archive",
