@@ -36,7 +36,7 @@ const COSMIA_COLLECTION_PREFIX = 'cosmia-collection-';
 
 const PACKAGE_NAME = chalk.blue('cosmia-core');
 
-const ERROR_MESSAGE_COSMIA_CUSTOM_CHILD = 'cosmia custom elements may only have a single text child.';
+const ERROR_MESSAGE_COSMIA_CUSTOM_CHILD = 'this cosmia custom element may only have a single text child.';
 const ERROR_MESSAGE_COSMIA_CUSTOM_ELEMENT = 'Only one of a given type of cosmia custom element is allowed per page.';
 
 var siteData = {};
@@ -53,7 +53,7 @@ var collectionsDir = '';
 var srcDir = '';
 
 //Used to pull an element with a cosmia-* attribute from the .hbs file
-function _extractCustomPageElement(page, attribute, process) {
+function _extractCustomPageElement(page, attribute, process, tolerateChildren = false) {
     //parse the html and dig out the relevant data element by custom attribute
     var dom = new htmlparser.parseDOM(page.content);
 
@@ -69,7 +69,7 @@ function _extractCustomPageElement(page, attribute, process) {
     if (dataElements.length) {
         var element = dataElements[0];
 
-        if (element.children.length > 1) {
+        if (element.children.length > 1 && !tolerateChildren) {
             throw ERROR_MESSAGE_COSMIA_CUSTOM_CHILD;
         }
 
@@ -191,7 +191,7 @@ function _processCollectionFile(name, content, dirName, collectionKey) {
         var keyName = path.join('.', name);
         for (var field of keys(data['content-fields'])) {
             var fieldName = `${COSMIA_COLLECTION_PREFIX}${field}`;
-            page = _extractCustomPageElement(page, fieldName, (e) => DomUtils.getInnerHTML(e));
+            page = _extractCustomPageElement(page, fieldName, (e) => DomUtils.getInnerHTML(e), true);
 
             cosmiaData[field] = page[fieldName];
             delete page[fieldName];
@@ -280,7 +280,8 @@ function _compilePage(page, customData = {}, silent = false) {
     var layoutName = pageLayoutName;
     var templateData = null;
     pageContext['cosmia-template-data'] = {};
-    //Iterate up the layout tree.
+    //Iterate up the layout tree to collect
+    //cosmia-template-data before rendering.
     //Child layout data overrides parent layout data
     do {
         templateData = handlebarsLayouts[layoutName]['cosmia-template-data'];

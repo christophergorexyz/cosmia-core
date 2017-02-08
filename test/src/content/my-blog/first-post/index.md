@@ -9,7 +9,7 @@
 <div cosmia-collection-content>
 # this is my first blog entry 
 
-This is a blog entry that's written in markdown – a simple text format that can be rendered to HTML 
+This is a <em>blog</em> entry that's written in markdown – a simple text format that can be rendered to HTML 
 
 </div>
 
