@@ -51,6 +51,7 @@ var helpersDir = '';
 var pagesDir = '';
 var collectionsDir = '';
 var srcDir = '';
+siteData['collection-items'] = {};
 
 //Used to pull an element with a cosmia-* attribute from the .hbs file
 function _extractCustomPageElement(page, attribute, process, tolerateChildren = false) {
@@ -208,7 +209,7 @@ function _processCollectionFile(name, content, dirName, collectionKey) {
             page[COSMIA_DATA]['layout'] = collectionData[collectionKey]['single-layout'];
             page[COSMIA_DATA]['permalink'] = name.replace(pagesDir, '').replace('index', '');
             pageData[singleKey] = page;
-            pageData[indexKey][COSMIA_DATA]['collection-items'].push(page[COSMIA_DATA]);
+            siteData['collection-items'][collectionKey].push(page[COSMIA_DATA]);
             delete page[COSMIA_COLLECTION_DATA];
         }
 
@@ -231,9 +232,9 @@ function _processCollectionData(name, content, dirName) {
     var indexKey = path.join(keyName, 'index');
     indexPage[COSMIA_DATA] = {};
     indexPage[COSMIA_DATA]['layout'] = collection['index-layout'] ? collection['index-layout'] : 'default';
-    indexPage[COSMIA_DATA]['collection-items'] = [];
     pageData[indexKey] = indexPage;
 
+    siteData['collection-items'][keyName] = [];
     return _processDirectory(collectionSourceDir, EXTENSION_MD, _processCollectionFile, keyName);
 }
 
