@@ -5,6 +5,7 @@
     "index-layout": "blog-roll",
     "single-layout": "blog-post",
     "archive-layout": "blog-archive",
+    "suppress-post-output": false,
     "meta-fields": {
         "title": {
             "type": "text"

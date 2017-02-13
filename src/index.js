@@ -213,6 +213,10 @@ function _processCollectionFile(name, content, dirName, collectionKey) {
             delete page[COSMIA_COLLECTION_DATA];
         }
 
+        if(!isIndex && data['suppress-post-output']){
+            delete pageData[singleKey];
+        }
+
         return resolve();
     });
 }
