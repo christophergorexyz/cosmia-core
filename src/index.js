@@ -77,9 +77,6 @@ function _extractCustomPageElement(page, attribute, process, tolerateChildren = 
         if (element.children.length) {
             try {
                 page[attribute] = process(element);
-                if(typeof page[attribute] === 'string'){
-                    page[attribute] = page[attribute].trim();
-                }
             } catch (err) {
                 throw page.path + '\n' + err;
             }
